@@ -1,0 +1,6 @@
+config.json
+data/
+sounds/
+.venv/
+__pycache__/
+*.pyc

@@ -1,0 +1,665 @@
+{
+  "controllers": [
+    {
+      "name": "ground",
+      "host": "192.168.1.51",
+      "port": 4048,
+      "enabled": true,
+      "sections": [
+        "DL1",
+        "DL2",
+        "DR1",
+        "DR2"
+      ],
+      "colour_order": "RGB",
+      "white_mode": "none",
+      "psu_watts": 240.0
+    },
+    {
+      "name": "upstairs",
+      "host": "192.168.1.52",
+      "port": 4048,
+      "enabled": true,
+      "sections": [
+        "UL1",
+        "UL2",
+        "UR1",
+        "UR2"
+      ],
+      "colour_order": "RGB",
+      "white_mode": "none",
+      "psu_watts": 240.0
+    }
+  ],
+  "sections": {
+    "UL1": {
+      "label": "Upstairs left, upper sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#FF6A00",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "upstairs",
+      "row": 0,
+      "col": 0,
+      "width_mm": 750.0,
+      "height_mm": 690.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    },
+    "UL2": {
+      "label": "Upstairs left, lower sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#8A2BE2",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "upstairs",
+      "row": 1,
+      "col": 0,
+      "width_mm": 750.0,
+      "height_mm": 700.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    },
+    "UR1": {
+      "label": "Upstairs right, upper sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#39FF14",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "upstairs",
+      "row": 0,
+      "col": 1,
+      "width_mm": 750.0,
+      "height_mm": 690.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    },
+    "UR2": {
+      "label": "Upstairs right, lower sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#C81010",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "upstairs",
+      "row": 1,
+      "col": 1,
+      "width_mm": 750.0,
+      "height_mm": 700.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    },
+    "DL1": {
+      "label": "Ground left, upper sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#F2F0E6",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "ground",
+      "row": 0,
+      "col": 0,
+      "width_mm": 750.0,
+      "height_mm": 750.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    },
+    "DL2": {
+      "label": "Ground left, lower sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#FF6A00",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "ground",
+      "row": 1,
+      "col": 0,
+      "width_mm": 750.0,
+      "height_mm": 750.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    },
+    "DR1": {
+      "label": "Ground right, upper sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#8A2BE2",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "ground",
+      "row": 0,
+      "col": 1,
+      "width_mm": 750.0,
+      "height_mm": 750.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    },
+    "DR2": {
+      "label": "Ground right, lower sash",
+      "enabled": true,
+      "weight": 1.0,
+      "colour": "#39FF14",
+      "flash_colour": null,
+      "sound": "",
+      "floor": "ground",
+      "row": 1,
+      "col": 1,
+      "width_mm": 750.0,
+      "height_mm": 750.0,
+      "strips": [
+        {
+          "side": "top",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "right",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "bottom",
+          "pixels": 13,
+          "reverse": false
+        },
+        {
+          "side": "left",
+          "pixels": 13,
+          "reverse": false
+        }
+      ],
+      "pixels": 52
+    }
+  },
+  "layout": {
+    "window_gap_mm": 230.0,
+    "sash_gap_mm": 50.0,
+    "floor_gap_mm": 700.0
+  },
+  "timing": {
+    "cycle_seconds": 5.0,
+    "min_step_ms": 70.0,
+    "max_step_ms": 700.0,
+    "steps": 0,
+    "easing": 2.0,
+    "order": "random",
+    "trail": 0.35,
+    "flash_seconds": 2.0,
+    "flash_hz": 6.0,
+    "flash_duty": 0.55,
+    "hold_seconds": 1.0,
+    "fade_seconds": 1.5,
+    "cooldown_seconds": 2.0
+  },
+  "idle": {
+    "playlist": "halloween",
+    "master": 1.0,
+    "cycle_background": 0.3
+  },
+  "playlists": [
+    {
+      "id": "halloween",
+      "name": "Halloween night",
+      "shuffle": false,
+      "items": [
+        {
+          "id": "7a977430",
+          "effect": "breathe",
+          "params": {
+            "colour": "#8A2BE2",
+            "speed": 0.12,
+            "depth": 0.6,
+            "stagger": 0.5,
+            "brightness": 1.0
+          },
+          "duration": 90.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "0e6f0cdc",
+          "effect": "lightning",
+          "params": {
+            "sky": "#140A33",
+            "flash": "#DDE4FF",
+            "rate": 8.0,
+            "afterglow": 0.2,
+            "brightness": 1.0
+          },
+          "duration": 90.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "f7b9cea9",
+          "effect": "ghosts",
+          "params": {
+            "colour": "#F2F0E6",
+            "background": "#08040F",
+            "count": 2,
+            "size": 0.2,
+            "speed": 0.25,
+            "brightness": 1.0
+          },
+          "duration": 90.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "2eead8fb",
+          "effect": "hellfire",
+          "params": {
+            "low": "#C81010",
+            "mid": "#FF6A00",
+            "high": "#FFC040",
+            "height": 0.8,
+            "speed": 1.0,
+            "embers": 0.3,
+            "brightness": 1.0
+          },
+          "duration": 60.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "7705db85",
+          "effect": "eyes",
+          "params": {
+            "colour": "#FF2200",
+            "background": "#000000",
+            "pairs": 3,
+            "blink": true,
+            "brightness": 1.0
+          },
+          "duration": 90.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "65a492e1",
+          "effect": "cauldron",
+          "params": {
+            "colour": "#39FF14",
+            "bubble": "#D8FF90",
+            "rate": 1.5,
+            "rise": 0.35,
+            "simmer": 0.4,
+            "brightness": 1.0
+          },
+          "duration": 60.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "0d457d37",
+          "effect": "marquee",
+          "params": {
+            "colour1": "#FF6A00",
+            "colour2": "#8A2BE2",
+            "colour3": "#39FF14",
+            "band": 4,
+            "gap": 0.3,
+            "speed": 8.0,
+            "direction": "cw",
+            "stagger": true,
+            "brightness": 1.0
+          },
+          "duration": 45.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "7e2762e8",
+          "effect": "wave",
+          "params": {
+            "colour1": "#FF6A00",
+            "colour2": "#8A2BE2",
+            "colour3": "#39FF14",
+            "colour4": "#C81010",
+            "direction": "horizontal",
+            "speed": 0.08,
+            "scale": 1.0,
+            "brightness": 1.0
+          },
+          "duration": 60.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "25f1d227",
+          "effect": "poltergeist",
+          "params": {
+            "colour1": "#FF6A00",
+            "colour2": "#8A2BE2",
+            "colour3": "#39FF14",
+            "activity": 1.5,
+            "hold": 0.7,
+            "stutter": 3.0,
+            "brightness": 1.0
+          },
+          "duration": 45.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "49dea017",
+          "effect": "drip",
+          "params": {
+            "colour": "#C81010",
+            "ooze": 0.35,
+            "rate": 0.6,
+            "gravity": 1.5,
+            "brightness": 1.0
+          },
+          "duration": 60.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "590e8f7b",
+          "effect": "bats",
+          "params": {
+            "sky_top": "#8A2BE2",
+            "sky_bottom": "#FF6A00",
+            "count": 5,
+            "size": 0.1,
+            "speed": 0.2,
+            "brightness": 1.0
+          },
+          "duration": 60.0,
+          "fade": 3.0,
+          "enabled": true
+        },
+        {
+          "id": "e185d381",
+          "effect": "searchlight",
+          "params": {
+            "colour": "#F2F0E6",
+            "background": "#05020A",
+            "width": 0.12,
+            "speed": 12.0,
+            "mode": "sweep",
+            "brightness": 1.0
+          },
+          "duration": 45.0,
+          "fade": 3.0,
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "id": "quiet",
+      "name": "Quiet glow",
+      "shuffle": false,
+      "items": [
+        {
+          "id": "140697ac",
+          "effect": "breathe",
+          "params": {
+            "colour": "#8A2BE2",
+            "speed": 0.12,
+            "depth": 0.6,
+            "stagger": 0.5,
+            "brightness": 1.0
+          },
+          "duration": 120.0,
+          "fade": 6.0,
+          "enabled": true
+        },
+        {
+          "id": "0e7fb6a6",
+          "effect": "candle",
+          "params": {
+            "colour": "#FF7A1A",
+            "flicker": 0.55,
+            "speed": 1.0,
+            "brightness": 1.0
+          },
+          "duration": 120.0,
+          "fade": 6.0,
+          "enabled": true
+        },
+        {
+          "id": "bfc463cb",
+          "effect": "fireflies",
+          "params": {
+            "colour": "#C8FF40",
+            "background": "#0A1405",
+            "density": 0.35,
+            "speed": 1.0,
+            "mixed": false,
+            "brightness": 1.0
+          },
+          "duration": 120.0,
+          "fade": 6.0,
+          "enabled": true
+        },
+        {
+          "id": "25ec0a00",
+          "effect": "wave",
+          "params": {
+            "colour1": "#FF6A00",
+            "colour2": "#8A2BE2",
+            "colour3": "#39FF14",
+            "colour4": "#C81010",
+            "direction": "horizontal",
+            "speed": 0.03,
+            "scale": 1.0,
+            "brightness": 1.0
+          },
+          "duration": 120.0,
+          "fade": 6.0,
+          "enabled": true
+        }
+      ]
+    }
+  ],
+  "test": {
+    "timeout_minutes": 30.0,
+    "colour": "#FFFFFF",
+    "level": 1.0,
+    "pattern": "solid",
+    "dwell_seconds": 3.0,
+    "walk_speed": 6.0,
+    "load_seconds": 60.0
+  },
+  "audio": {
+    "enabled": true,
+    "driver": "",
+    "device": "",
+    "buffer": 512,
+    "master_volume": 0.9,
+    "offset_ms": 0.0,
+    "ambient": "",
+    "ambient_volume": 0.3,
+    "button": "",
+    "button_volume": 0.9,
+    "tick": "",
+    "tick_volume": 0.6,
+    "tick_enabled": true,
+    "landing": "",
+    "landing_volume": 1.0,
+    "finale_delay_ms": 0.0,
+    "finale_volume": 1.0
+  },
+  "button": {
+    "enabled": true,
+    "switch_gpio": 17,
+    "pull_up": true,
+    "active_low": true,
+    "bounce_ms": 60,
+    "lamp_enabled": true,
+    "lamp_gpio": 18,
+    "lamp_pwm": true,
+    "lamp_frequency": 200,
+    "idle_brightness": 0.35,
+    "idle_pulse": true,
+    "idle_pulse_speed": 0.25,
+    "cycle_flash_hz": 8.0,
+    "landing_flash_hz": 3.0,
+    "cooldown_brightness": 0.08
+  },
+  "render": {
+    "fps": 50,
+    "master_brightness": 1.0,
+    "gamma": 2.2,
+    "enabled": true,
+    "watts_per_pixel": 0.78,
+    "supply_voltage": 24.0
+  },
+  "web": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "preview_fps": 20
+  }
+}

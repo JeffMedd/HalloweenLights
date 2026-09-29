@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d0712">
+<title>Window Display</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <span class="pumpkin" aria-hidden="true"></span>
+    <h1>Window Display</h1>
+  </div>
+  <div class="bar-right">
+    <span id="state-pill" class="pill">connecting</span>
+    <button id="save" class="btn primary" disabled>Saved</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab active" data-tab="play">Play</button>
+  <button class="tab" data-tab="test">Test</button>
+  <button class="tab" data-tab="effects">Effects</button>
+  <button class="tab" data-tab="sections">Sections</button>
+  <button class="tab" data-tab="timing">Timing</button>
+  <button class="tab" data-tab="audio">Audio</button>
+  <button class="tab" data-tab="button">Button</button>
+  <button class="tab" data-tab="hardware">Hardware</button>
+</nav>
+
+<div id="test-banner" class="test-banner" hidden>
+  <strong>Test mode is on.</strong>
+  <span>The game is paused and the button only reports presses.</span>
+  <span id="test-timeout" class="muted"></span>
+  <button id="test-exit-banner" class="btn">Exit test mode</button>
+</div>
+
+<main>
+
+<!-- ================================================================ PLAY -->
+<section class="panel active" id="tab-play">
+  <div class="split">
+    <div class="house-panel">
+      <canvas id="house-play" aria-label="Live view of the windows"></canvas>
+      <p class="caption">Live. Click a sash to light it for five seconds.</p>
+    </div>
+    <div class="side">
+      <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+      <div class="play-controls">
+        <button id="trigger" class="dome"><span>Press</span></button>
+        <div class="play-side">
+          <div class="lamp-row"><span class="lamp" id="lamp"></span><span class="muted">button lamp</span></div>
+          <button id="stop" class="btn">Stop round</button>
+          <button id="all-on" class="btn">All on, 15s</button>
+          <button id="blackout" class="btn">Blackout</button>
+        </div>
+      </div>
+
+      <div class="card now-playing">
+        <div class="k">Between rounds</div>
+        <div class="v" id="np-label">-</div>
+        <div class="muted" id="np-detail"></div>
+        <div class="row">
+          <button class="btn tiny" id="np-next">Next effect</button>
+          <button class="btn tiny" id="np-resume" hidden>Back to playlist</button>
+        </div>
+      </div>
+      <div class="cards" id="status-cards"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ TEST -->
+<section class="panel" id="tab-test">
+  <div class="split">
+    <div class="house-panel sticky">
+      <canvas id="house-test" aria-label="Wiring view"></canvas>
+      <p class="caption">Click a strip to switch it on or off. Click inside a sash for the whole sash.
+        The small white dot marks where each strip's data starts.</p>
+      <div id="test-info" class="test-info" hidden></div>
+    </div>
+
+    <div class="side">
+      <fieldset>
+        <legend>Brush</legend>
+        <p class="hint">What gets switched on next. Change these, then press
+          <em>Apply to everything lit</em> to restyle what is already on.</p>
+        <label>Colour
+          <span class="colour-row">
+            <input type="color" id="brush-colour" value="#ffffff">
+            <span class="swatches" id="brush-swatches"></span>
+          </span>
+        </label>
+        <div class="grid2c">
+          <label>Brightness <span class="muted" id="brush-level-v">100%</span>
+            <input type="range" id="brush-level" min="0" max="1" step="0.01" value="1">
+          </label>
+          <label>Pattern
+            <select id="brush-pattern"></select>
+          </label>
+        </div>
+        <div class="row">
+          <button class="btn" id="brush-apply">Apply to everything lit</button>
+          <button class="btn" id="test-clear">Switch everything off</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Select</legend>
+        <div class="row">
+          <button class="chip" data-target="all">Whole house</button>
+          <button class="chip" data-target="floor:upstairs">Upstairs bay</button>
+          <button class="chip" data-target="floor:ground">Ground bay</button>
+        </div>
+        <div class="row">
+          <button class="chip" data-target="window:UL">UL window</button>
+          <button class="chip" data-target="window:UR">UR window</button>
+          <button class="chip" data-target="window:DL">DL window</button>
+          <button class="chip" data-target="window:DR">DR window</button>
+        </div>
+        <div id="strip-grid" class="strip-grid"></div>
+        <p class="hint">Sash buttons switch all four strips. The small buttons are the
+          individual strips in data order: T top, R right, B bottom, L left.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>A/B compare: channel or no channel?</legend>
+        <p class="hint">Fit an aluminium channel and diffuser to one sash and leave the
+          other bare, then light both the same way and look from across the road after
+          dark. <em>Every other pixel</em> exaggerates dotting; drop to about 30% to see
+          how the idle effects will look.</p>
+        <div class="ab">
+          <div class="ab-col">
+            <h3>A</h3>
+            <label>Light <select id="ab-a-target" class="ab-target"></select></label>
+            <label>Colour <input type="color" id="ab-a-colour" value="#ff6a00"></label>
+            <label>Brightness <span class="muted" id="ab-a-level-v">100%</span>
+              <input type="range" id="ab-a-level" min="0" max="1" step="0.01" value="1"></label>
+            <label>Pattern <select id="ab-a-pattern" class="pattern-select"></select></label>
+          </div>
+          <div class="ab-col">
+            <h3>B</h3>
+            <label>Light <select id="ab-b-target" class="ab-target"></select></label>
+            <label>Colour <input type="color" id="ab-b-colour" value="#ff6a00"></label>
+            <label>Brightness <span class="muted" id="ab-b-level-v">100%</span>
+              <input type="range" id="ab-b-level" min="0" max="1" step="0.01" value="1"></label>
+            <label>Pattern <select id="ab-b-pattern" class="pattern-select"></select></label>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn primary-soft" id="ab-show">Show A and B</button>
+          <button class="btn" id="ab-swap">Swap</button>
+          <button class="btn" id="ab-match">Copy A's settings to B</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Wiring sequences</legend>
+        <p class="hint">Automated checks. Each runs over everything, or only over what is
+          lit now if you tick the box. The line under the house says what you should see.</p>
+        <div class="seq-grid" id="seq-grid"></div>
+        <div class="grid3">
+          <label>Colour <input type="color" id="seq-colour" value="#ffffff"></label>
+          <label>Seconds per step <input type="number" id="seq-dwell" min="0.3" max="60" step="0.1" value="3"></label>
+          <label>Walk speed (px/s) <input type="number" id="seq-speed" min="0.5" max="200" step="0.5" value="6"></label>
+        </div>
+        <label class="check"><input type="checkbox" id="seq-scope"> Only what is lit now</label>
+        <button class="btn" id="seq-stop">Stop sequence</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Button and lamp</legend>
+        <div class="press-box" id="press-box">
+          <div class="press-count" id="press-count">0</div>
+          <div class="muted">presses <span id="press-last"></span></div>
+        </div>
+        <p class="hint">In test mode each press flashes the lamp and counts here instead
+          of starting a round. Useful for checking the switch wiring from the post.</p>
+        <label>Lamp level <span class="muted" id="lamp-level-v">idle</span>
+          <input type="range" id="lamp-level" min="0" max="1" step="0.01" value="0.35">
+        </label>
+        <button class="btn" id="lamp-release">Release lamp</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Power estimate</legend>
+        <div id="power-list" class="power-list"></div>
+        <p class="hint">Estimated from what is being sent, at full white of
+          <span id="wpp"></span>W per pixel. Run the <em>Full white load test</em> to check the
+          supplies hold up and the far end of each strip does not go yellow.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Controllers</legend>
+        <button class="btn" id="diag-run">Check controllers</button>
+        <div id="diag-out" class="diag-out"></div>
+      </fieldset>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== EFFECTS -->
+<section class="panel" id="tab-effects">
+  <div class="split">
+    <div class="house-panel sticky">
+      <canvas id="house-fx" aria-label="Effect preview"></canvas>
+      <p class="caption" id="fx-caption">Preview. Choose an effect to see it here; the
+        house itself is not changed.</p>
+      <div class="row center">
+        <button class="btn primary-soft" id="fx-show">Show on the house</button>
+        <select id="fx-show-minutes" class="inline-select">
+          <option value="0">until I go back</option>
+          <option value="5">for 5 minutes</option>
+          <option value="15">for 15 minutes</option>
+          <option value="60">for an hour</option>
+        </select>
+        <button class="btn" id="fx-resume">Back to playlist</button>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card now-playing">
+        <div class="k">On the house between rounds</div>
+        <div class="v" id="np2-label">-</div>
+        <div class="muted" id="np2-detail"></div>
+        <div class="row"><button class="btn tiny" id="np2-next">Next effect</button></div>
+      </div>
+
+      <fieldset>
+        <legend>Effects</legend>
+        <div class="fx-grid" id="fx-grid"></div>
+      </fieldset>
+
+      <fieldset id="fx-editor" hidden>
+        <legend id="fx-editor-title">Settings</legend>
+        <p class="hint" id="fx-editor-desc"></p>
+        <div id="fx-params" class="fx-params"></div>
+        <div class="grid3">
+          <label>Play for (seconds) <input type="number" id="fx-duration" min="5" max="7200" step="5" value="60"></label>
+          <label>Fade into next (seconds) <input type="number" id="fx-fade" min="0" max="60" step="0.5" value="3"></label>
+          <label>&nbsp;<button class="btn" id="fx-reset">Reset to defaults</button></label>
+        </div>
+        <div class="row">
+          <button class="btn primary-soft" id="fx-add">Add to playlist</button>
+          <button class="btn primary-soft" id="fx-update" hidden>Update this item</button>
+          <button class="btn" id="fx-cancel-edit" hidden>Stop editing</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Playlists</legend>
+        <div class="row">
+          <select id="pl-select" class="grow"></select>
+          <button class="btn tiny" id="pl-new">New</button>
+          <button class="btn tiny" id="pl-dup">Duplicate</button>
+          <button class="btn tiny danger" id="pl-del">Delete</button>
+        </div>
+        <label>Name <input type="text" id="pl-name"></label>
+        <div class="row">
+          <label class="check"><input type="checkbox" id="pl-shuffle"> Shuffle</label>
+          <span id="pl-active-badge" class="badge">Plays between rounds</span>
+          <button class="btn tiny" id="pl-activate">Use between rounds</button>
+          <button class="btn tiny" id="pl-preview">Preview playlist</button>
+        </div>
+        <div class="table-wrap">
+          <table class="pl-table">
+            <thead><tr><th>#</th><th>Effect</th><th>Seconds</th><th>Fade</th><th>On</th><th></th></tr></thead>
+            <tbody id="pl-items"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="pl-total"></p>
+        <label>Idle brightness <span class="muted" id="idle-master-v"></span>
+          <input type="range" min="0" max="1" step="0.01" data-path="idle.master" id="idle-master">
+        </label>
+        <p class="hint">Playlist changes need <em>Save changes</em> at the top. Previews do not.</p>
+      </fieldset>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= SECTIONS -->
+<section class="panel" id="tab-sections">
+  <p class="hint">Each section is one sash. Colour is what it shows while cycling
+    and when it wins. The sound plays when that section is the winner. Strips are
+    listed in data order; the Test tab's pixel walk shows you the real order.</p>
+  <div id="section-list" class="section-list"></div>
+</section>
+
+<!-- =============================================================== TIMING -->
+<section class="panel" id="tab-timing">
+  <div class="grid2">
+    <fieldset>
+      <legend>The cycle</legend>
+      <label>Cycle length (seconds)
+        <input type="number" step="0.1" min="0.5" max="60" data-path="timing.cycle_seconds"></label>
+      <label>Fastest dwell (ms)
+        <input type="number" step="5" min="20" data-path="timing.min_step_ms"></label>
+      <label>Slowest dwell (ms)
+        <input type="number" step="10" min="20" data-path="timing.max_step_ms"></label>
+      <label>Steps <span class="muted">(0 = fit automatically)</span>
+        <input type="number" step="1" min="0" max="400" data-path="timing.steps"></label>
+      <label>Slow-down curve <span class="muted">(higher = lazier ending)</span>
+        <input type="number" step="0.1" min="0.5" max="6" data-path="timing.easing"></label>
+      <label>Hop order
+        <select data-path="timing.order">
+          <option value="random">Random</option>
+          <option value="sequential">Round the windows</option>
+        </select></label>
+      <label>Trail <span class="muted">(how long the last section lingers)</span>
+        <input type="number" step="0.05" min="0" max="1" data-path="timing.trail"></label>
+      <label>Losing sections during a round <span class="muted">(0 = dark)</span>
+        <input type="number" step="0.05" min="0" max="1" data-path="idle.cycle_background"></label>
+      <p class="hint" id="curve-note"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>The finale</legend>
+      <label>Flash for (seconds)
+        <input type="number" step="0.1" min="0" max="30" data-path="timing.flash_seconds"></label>
+      <label>Flash rate (Hz)
+        <input type="number" step="0.5" min="0.5" max="25" data-path="timing.flash_hz"></label>
+      <label>Flash on-time <span class="muted">(0.5 = even)</span>
+        <input type="number" step="0.05" min="0.05" max="0.95" data-path="timing.flash_duty"></label>
+      <label>Hold solid after flashing (seconds)
+        <input type="number" step="0.1" min="0" max="60" data-path="timing.hold_seconds"></label>
+      <label>Fade back to idle (seconds)
+        <input type="number" step="0.1" min="0" max="30" data-path="timing.fade_seconds"></label>
+      <label>Ignore presses after a round (seconds)
+        <input type="number" step="0.1" min="0" max="60" data-path="timing.cooldown_seconds"></label>
+    </fieldset>
+  </div>
+</section>
+
+<!-- ================================================================ AUDIO -->
+<section class="panel" id="tab-audio">
+  <div class="grid2">
+    <fieldset>
+      <legend>Output</legend>
+      <label class="check"><input type="checkbox" data-path="audio.enabled"> Audio enabled</label>
+      <label>Output device
+        <select data-path="audio.device" id="audio-device"><option value="">System default</option></select></label>
+      <label>SDL driver <span class="muted">(blank is usually right)</span>
+        <input type="text" data-path="audio.driver" placeholder="pulseaudio / alsa"></label>
+      <label>Mixer buffer <span class="muted">(smaller = tighter, riskier)</span>
+        <input type="number" step="128" min="128" max="4096" data-path="audio.buffer"></label>
+      <label>Master volume
+        <input type="number" step="0.05" min="0" max="1" data-path="audio.master_volume"></label>
+      <label>Latency offset (ms)
+        <input type="number" step="10" min="0" max="1000" data-path="audio.offset_ms"></label>
+      <p class="hint">Wired output: 0. Bluetooth usually needs 150 to 250ms. A restart of
+        the service is needed after changing device, driver or buffer.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Layers</legend>
+      <label>Ambient bed (looped)
+        <span class="sound-row"><select data-path="audio.ambient" data-sound></select>
+        <button class="btn tiny" data-play="audio.ambient">Play</button></span></label>
+      <label>Ambient volume
+        <input type="number" step="0.05" min="0" max="1" data-path="audio.ambient_volume"></label>
+      <label>Button sting
+        <span class="sound-row"><select data-path="audio.button" data-sound></select>
+        <button class="btn tiny" data-play="audio.button">Play</button></span></label>
+      <label>Sting volume
+        <input type="number" step="0.05" min="0" max="1" data-path="audio.button_volume"></label>
+      <label class="check"><input type="checkbox" data-path="audio.tick_enabled"> Tick on every hop</label>
+      <label>Tick
+        <span class="sound-row"><select data-path="audio.tick" data-sound></select>
+        <button class="btn tiny" data-play="audio.tick">Play</button></span></label>
+      <label>Tick volume
+        <input type="number" step="0.05" min="0" max="1" data-path="audio.tick_volume"></label>
+      <label>Landing stab
+        <span class="sound-row"><select data-path="audio.landing" data-sound></select>
+        <button class="btn tiny" data-play="audio.landing">Play</button></span></label>
+      <label>Landing volume
+        <input type="number" step="0.05" min="0" max="1" data-path="audio.landing_volume"></label>
+      <label>Winner sound delay (ms)
+        <input type="number" step="50" min="0" max="5000" data-path="audio.finale_delay_ms"></label>
+      <label>Winner sound volume
+        <input type="number" step="0.05" min="0" max="1" data-path="audio.finale_volume"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Sound library</legend>
+      <p class="hint">WAV gives the tightest timing. Files live in the sounds folder on the Pi.</p>
+      <input type="file" id="sound-upload" accept=".wav,.ogg,.mp3,.flac" multiple>
+      <ul class="sound-list" id="sound-list"></ul>
+    </fieldset>
+  </div>
+</section>
+
+<!-- =============================================================== BUTTON -->
+<section class="panel" id="tab-button">
+  <div class="grid2">
+    <fieldset>
+      <legend>Switch</legend>
+      <label class="check"><input type="checkbox" data-path="button.enabled"> Physical button enabled</label>
+      <label>Switch GPIO (BCM)
+        <input type="number" step="1" min="0" max="27" data-path="button.switch_gpio"></label>
+      <label class="check"><input type="checkbox" data-path="button.pull_up"> Internal pull-up</label>
+      <label>Debounce (ms)
+        <input type="number" step="5" min="0" max="2000" data-path="button.bounce_ms"></label>
+      <p class="hint">On a long run to the fence post, fit a 2.2k pull-up to 3V3 at the Pi
+        and a 100nF capacitor across the switch terminals.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Lamp</legend>
+      <label class="check"><input type="checkbox" data-path="button.lamp_enabled"> Lamp controlled by the Pi</label>
+      <label>Lamp GPIO (BCM)
+        <input type="number" step="1" min="0" max="27" data-path="button.lamp_gpio"></label>
+      <label class="check"><input type="checkbox" data-path="button.lamp_pwm"> Dimmable (PWM)</label>
+      <label>PWM frequency (Hz)
+        <input type="number" step="10" min="30" max="8000" data-path="button.lamp_frequency"></label>
+      <label>Idle brightness
+        <input type="number" step="0.05" min="0" max="1" data-path="button.idle_brightness"></label>
+      <label class="check"><input type="checkbox" data-path="button.idle_pulse"> Slow pulse while idle</label>
+      <label>Idle pulse speed
+        <input type="number" step="0.05" min="0.01" max="5" data-path="button.idle_pulse_speed"></label>
+      <label>Flash rate while cycling (Hz)
+        <input type="number" step="0.5" min="0.5" max="30" data-path="button.cycle_flash_hz"></label>
+      <label>Flash rate on the winner (Hz)
+        <input type="number" step="0.5" min="0.5" max="30" data-path="button.landing_flash_hz"></label>
+      <label>Brightness during cooldown
+        <input type="number" step="0.02" min="0" max="1" data-path="button.cooldown_brightness"></label>
+    </fieldset>
+  </div>
+</section>
+
+<!-- ============================================================= HARDWARE -->
+<section class="panel" id="tab-hardware">
+  <fieldset>
+    <legend>Render</legend>
+    <div class="grid3">
+      <label>Frame rate <input type="number" step="1" min="5" max="120" data-path="render.fps"></label>
+      <label>Master brightness <input type="number" step="0.05" min="0" max="1" data-path="render.master_brightness"></label>
+      <label>Gamma <input type="number" step="0.1" min="1" max="3.5" data-path="render.gamma"></label>
+      <label>Watts per pixel at full white <input type="number" step="0.01" min="0" max="20" data-path="render.watts_per_pixel"></label>
+      <label>Supply voltage <input type="number" step="1" min="1" max="60" data-path="render.supply_voltage"></label>
+      <label class="check"><input type="checkbox" data-path="render.enabled"> Send DDP output</label>
+      <label>Web port <span class="muted">(needs a restart)</span>
+        <input type="number" step="1" min="1" max="65535" data-path="web.port"></label>
+      <label>Preview frame rate <input type="number" step="1" min="1" max="60" data-path="web.preview_fps"></label>
+      <label>Test mode auto-exit (minutes) <input type="number" step="1" min="1" max="240" data-path="test.timeout_minutes"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Controllers</legend>
+    <p class="hint">Section order must match the order of the LED outputs in WLED,
+      because DDP addresses one flat pixel run per controller.</p>
+    <div id="controller-list"></div>
+    <button class="btn" id="diag-run-2">Check controllers</button>
+    <div id="diag-out-2" class="diag-out"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>House layout</legend>
+    <p class="hint">Only affects the drawing and the spatial effects, not the pixels.</p>
+    <div class="grid3">
+      <label>Gap between windows (mm) <input type="number" step="10" min="0" data-path="layout.window_gap_mm"></label>
+      <label>Meeting rail (mm) <input type="number" step="5" min="0" data-path="layout.sash_gap_mm"></label>
+      <label>Gap between bays (mm) <input type="number" step="50" min="0" data-path="layout.floor_gap_mm"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Status</legend>
+    <pre id="status-json" class="status-json">loading</pre>
+  </fieldset>
+</section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+<script src="/static/house.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

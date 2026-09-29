@@ -1,0 +1,28 @@
+[Unit]
+Description=Halloween window display
+Documentation=file://__DIR__/README.md
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+Group=__USER__
+SupplementaryGroups=gpio audio
+WorkingDirectory=__DIR__
+Environment=HALLOWEEN_HOME=__DIR__
+Environment=PYTHONUNBUFFERED=1
+# Needed so PipeWire/PulseAudio (and therefore Bluetooth audio) is reachable.
+# Run "loginctl enable-linger __USER__" once so the session exists at boot.
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStart=__DIR__/.venv/bin/python -m display --config __DIR__/config.json \
+          --sounds __DIR__/sounds --data __DIR__/data
+Restart=always
+RestartSec=3
+# Give the LEDs and the frame clock priority over housekeeping.
+Nice=-5
+IOSchedulingClass=best-effort
+IOSchedulingPriority=2
+
+[Install]
+WantedBy=multi-user.target
