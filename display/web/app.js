@@ -202,6 +202,7 @@
       },
     });
     views.test = new HouseView($("#house-test"), {
+      icons: true,
       interactive: true,
       onPick: (hit) => {
         const target = hit.type === "strip" ? hit.key : hit.section;

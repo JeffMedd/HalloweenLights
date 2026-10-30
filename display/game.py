@@ -129,6 +129,7 @@ class Engine:
         self.measured_fps = 0.0
         self._last_frame_time = now
         self._trigger_pending = False
+        self.round_counts = True   # False for rounds started from the web page
         self._last_frame: np.ndarray = self.geo.blank()
 
     # ------------------------------------------------------------------
@@ -206,21 +207,28 @@ class Engine:
             self._save_counters()
         self._trigger_pending = True
 
-    def trigger(self, forced: bool = False) -> Dict:
+    def trigger(self, forced: bool = False, source: str = "web") -> Dict:
+        """Start a round. Only rounds started by the real button (source
+        "button") count towards the counters, tallies, history and the
+        winners log; rounds started from the web page are played but not
+        recorded."""
+        counts = source == "button"
         if self.testmode.active:
             return {"accepted": False, "reason": "test mode is on"}
         if self.state == STATE_SPOT:
             self.audio.stop_all_effects()   # a preview sound gives way to the game
             self.spot = {}
         if self.state not in (STATE_IDLE, STATE_SPOT) and not forced:
-            self.ignored_presses += 1
-            self._save_counters()
+            if counts:
+                self.ignored_presses += 1
+                self._save_counters()
             return {"accepted": False, "reason": f"busy ({self.state})"}
         candidates = enabled_section_ids(self.cfg)
         if not candidates:
             return {"accepted": False, "reason": "no sections enabled"}
+        self.round_counts = counts
         self._begin_round(candidates)
-        return {"accepted": True, "winner": self.winner}
+        return {"accepted": True, "winner": self.winner, "counted": counts}
 
     def _pick_winner(self, candidates: List[str]) -> str:
         """Weighted random pick that skips the last few winners.
@@ -434,7 +442,7 @@ class Engine:
                 if self.testmode.active:
                     self.testmode.touch()      # reported, not played
                 else:
-                    self.trigger()
+                    self.trigger(source="button")
                 now = time.monotonic()
 
             self._advance(now)
@@ -501,13 +509,19 @@ class Engine:
         self.state_started = now
 
     def _finish_round(self, now: float) -> None:
-        self.rounds += 1
-        with self._counter_lock:
-            self.total_rounds += 1
         self.last_winner = self.winner
         self.last_round_at = time.time()
         self.current_section = None
         self.prev_section = None
+        if self.round_counts:
+            self._record_round()
+        self.audio.start_ambient()
+        self._enter(STATE_COOLDOWN, now)
+
+    def _record_round(self) -> None:
+        self.rounds += 1
+        with self._counter_lock:
+            self.total_rounds += 1
         character = self.cfg["sections"].get(self.winner, {}).get("character", "")
         self.history.insert(0, {"winner": self.winner, "character": character,
                                 "at": self.last_round_at})
@@ -518,8 +532,6 @@ class Engine:
             self.total_tally[self.winner] = self.total_tally.get(self.winner, 0) + 1
         self._save_counters()
         self._log_winner(self.winner, character, self.last_round_at)
-        self.audio.start_ambient()
-        self._enter(STATE_COOLDOWN, now)
 
     def _step_at(self, now: float) -> int:
         if not self.schedule or now < self.schedule[0][0]:
