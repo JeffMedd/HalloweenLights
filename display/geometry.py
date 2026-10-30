@@ -262,6 +262,8 @@ class Geometry:
                 {
                     "id": sid,
                     "label": cfg["sections"][sid]["label"],
+                    "character": cfg["sections"][sid].get("character", ""),
+                    "icon": cfg["sections"][sid].get("icon", ""),
                     "floor": cfg["sections"][sid]["floor"],
                     "rect": self.rects[sid],
                     "start": self.section_slices[sid].start,

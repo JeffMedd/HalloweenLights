@@ -190,6 +190,7 @@
   function setupViews() {
     views.play = new HouseView($("#house-play"), {
       interactive: true,
+      icons: true,
       onPick: (hit) => {
         post(`/api/test/section/${hit.section}`, { seconds: 5 })
           .then(() => toast(`${hit.section} on for 5s`))
@@ -710,6 +711,10 @@
           <label class="check"><input type="checkbox" data-path="sections.${sid}.enabled"> In play</label>
         </header>
         <label>Name <input type="text" data-path="sections.${sid}.label"></label>
+        <div class="grid3">
+          <label>Character <input type="text" maxlength="40" data-path="sections.${sid}.character"></label>
+          <label>Icon <span class="muted">(an emoji)</span> <input type="text" maxlength="16" data-path="sections.${sid}.icon"></label>
+        </div>
         <label>Colour
           <span class="colour-row">
             <input type="color" data-path="sections.${sid}.colour">
@@ -976,6 +981,18 @@
     socket.onerror = () => { try { socket.close(); } catch (err) { /* ignore */ } };
   }
 
+  function renderTally(status) {
+    const table = $("#winner-tally");
+    if (!table || !cfg) return;
+    const tally = status.tally || {}, total = status.total_tally || {};
+    const rows = Object.keys(cfg.sections)
+      .map((sid) => ({ sid, s: cfg.sections[sid], n: tally[sid] || 0, t: total[sid] || 0 }))
+      .sort((a, b) => b.t - a.t || b.n - a.n);
+    table.innerHTML = `<thead><tr><th></th><th>Character</th><th>Since reset</th><th>All time</th></tr></thead><tbody>` +
+      rows.map((r) => `<tr><td>${esc(r.s.icon || "")}</td><td>${esc(r.s.character || r.sid)} <span class="muted">${esc(r.sid)}</span></td>` +
+        `<td>${r.n}</td><td>${r.t}</td></tr>`).join("") + "</tbody>";
+  }
+
   async function refreshStatus() {
     let status;
     try { status = await api("/api/status"); } catch (err) { return; }
@@ -983,7 +1000,9 @@
       ["Presses", status.presses],
       ["Rounds played", status.rounds],
       ["Presses, all time", status.total_presses],
-      ["Last winner", status.last_winner || "-"],
+      ["Last winner", status.last_winner
+        ? `${(cfg && cfg.sections[status.last_winner] && cfg.sections[status.last_winner].icon) || ""} ${(cfg && cfg.sections[status.last_winner] && cfg.sections[status.last_winner].character) || ""} (${status.last_winner})`.trim()
+        : "-"],
       ["Frame rate", status.fps + " fps"],
       ["Button", status.button.backend === "gpiozero" ? "connected" : status.button.backend],
       ["Audio", status.audio.available ? status.audio.device : status.audio.status],
@@ -991,6 +1010,7 @@
     ];
     $("#status-cards").innerHTML = cards.map(([k, v]) =>
       `<div class="card"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join("");
+    renderTally(status);
     $("#status-json").textContent = JSON.stringify(status, null, 2);
   }
 
@@ -1113,7 +1133,7 @@
       post("/api/test/all", { seconds: 15 }).then(() => toast("All sections on for 15s")));
     $("#blackout").addEventListener("click", () => post("/api/blackout").then(() => toast("Blackout")));
     $("#reset-counters").addEventListener("click", () => {
-      if (!confirm("Reset the presses and rounds counters to zero? The all-time total is kept.")) return;
+      if (!confirm("Reset the presses, rounds and winners-since-reset counts to zero? All-time totals are kept.")) return;
       post("/api/counters/reset")
         .then((r) => { toast(`Counters reset. All-time presses: ${r.total_presses}`); refreshStatus(); })
         .catch((e) => toast(e.message, true));

@@ -331,3 +331,6 @@ input:focus, select:focus { outline: 2px solid var(--accent-2); outline-offset: 
   .dome { width: 108px; height: 108px; font-size: 15px; }
   main { padding: 0 10px 40px; }
 }
+
+.tally-card { margin-top: 14px; }
+.tally-card .strip-table td:first-child { font-size: 18px; width: 28px; }

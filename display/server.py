@@ -146,6 +146,12 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
         with engine.lock:
             return JSONResponse(engine.reset_counters())
 
+    async def winners_csv(request: Request) -> Response:
+        path = engine.winners_path
+        body = path.read_text("utf-8") if path.exists() else "time,section,character\n"
+        return Response(body, media_type="text/csv", headers={
+            "Content-Disposition": 'attachment; filename="winners.csv"'})
+
     async def stop_round(request: Request) -> Response:
         with engine.lock:
             engine.stop_round()
@@ -462,6 +468,7 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
         Route("/api/trigger", trigger, methods=["POST"]),
         Route("/api/stop", stop_round, methods=["POST"]),
         Route("/api/counters/reset", reset_counters, methods=["POST"]),
+        Route("/api/winners.csv", winners_csv, methods=["GET"]),
         Route("/api/test", test, methods=["POST"]),
         Route("/api/test/section/{section_id}", test_section, methods=["POST"]),
         Route("/api/test/all", test_all, methods=["POST"]),

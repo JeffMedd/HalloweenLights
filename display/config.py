@@ -43,6 +43,19 @@ _SECTION_META = {
     "DR2": ("Ground right, lower sash", "ground", 1, 1, "#39FF14", 750, 750),
 }
 
+# The silhouette in each sash: shown on the Play tab drawing and in the
+# winners tally. Editable per section on the Sections tab.
+_SECTION_CHARACTERS = {
+    "UL1": ("Frog", "\U0001F438"),
+    "UL2": ("Dog", "\U0001F436"),
+    "UR1": ("Cat", "\U0001F431"),
+    "UR2": ("Crow", "\U0001F426"),
+    "DL1": ("Witch", "\U0001F9D9"),
+    "DL2": ("Vampire", "\U0001F9DB"),
+    "DR1": ("Dragon", "\U0001F409"),
+    "DR2": ("Ghost", "\U0001F47B"),
+}
+
 DEFAULT_STRIP_PIXELS = 13   # 722mm cut at 55.56mm pitch
 
 
@@ -60,6 +73,8 @@ def _default_sections() -> Dict[str, Any]:
         label, floor, row, col, colour, width, height = _SECTION_META[sid]
         out[sid] = {
             "label": label,
+            "character": _SECTION_CHARACTERS[sid][0],
+            "icon": _SECTION_CHARACTERS[sid][1],
             "enabled": True,
             "weight": 1.0,
             "colour": colour,
@@ -288,6 +303,8 @@ def _validate_section(sid: str, value: Dict[str, Any]) -> Dict[str, Any]:
                             if base.get("flash_colour") else None)
     base["sound"] = str(base.get("sound") or "")
     base["label"] = str(base.get("label") or sid)
+    base["character"] = str(base.get("character") or "").strip()[:40]
+    base["icon"] = str(base.get("icon") or "").strip()[:16]
     base["floor"] = "ground" if str(base.get("floor")) == "ground" else "upstairs"
     base["row"] = int(_clamp(_num(base.get("row"), 0), 0, 5))
     base["col"] = int(_clamp(_num(base.get("col"), 0), 0, 5))

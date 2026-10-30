@@ -73,6 +73,7 @@ class Engine:
         self.data_dir = Path(data_dir)
         self.history_path = self.data_dir / "history.json"
         self.counters_path = self.data_dir / "counters.json"
+        self.winners_path = self.data_dir / "winners.csv"
         self._counter_lock = threading.Lock()
         self.lock = threading.RLock()
 
@@ -121,6 +122,8 @@ class Engine:
         self.total_presses = 0
         self.total_rounds = 0
         self.counters_since: Optional[float] = None
+        self.tally: Dict[str, int] = {}
+        self.total_tally: Dict[str, int] = {}
         self._load_counters()
         self.frames = 0
         self.measured_fps = 0.0
@@ -482,10 +485,16 @@ class Engine:
         self.last_round_at = time.time()
         self.current_section = None
         self.prev_section = None
-        self.history.insert(0, {"winner": self.winner, "at": self.last_round_at})
+        character = self.cfg["sections"].get(self.winner, {}).get("character", "")
+        self.history.insert(0, {"winner": self.winner, "character": character,
+                                "at": self.last_round_at})
         del self.history[200:]
         self._save_history()
+        with self._counter_lock:
+            self.tally[self.winner] = self.tally.get(self.winner, 0) + 1
+            self.total_tally[self.winner] = self.total_tally.get(self.winner, 0) + 1
         self._save_counters()
+        self._log_winner(self.winner, character, self.last_round_at)
         self.audio.start_ambient()
         self._enter(STATE_COOLDOWN, now)
 
@@ -660,6 +669,8 @@ class Engine:
             "total_presses": self.total_presses,
             "total_rounds": self.total_rounds,
             "counters_since": self.counters_since,
+            "tally": dict(self.tally),
+            "total_tally": dict(self.total_tally),
             "last_winner": self.last_winner,
             "last_round_at": self.last_round_at,
             "fps": round(self.measured_fps, 1),
@@ -693,6 +704,7 @@ class Engine:
                 self.button.press_count = 0
             self.rounds = 0
             self.ignored_presses = 0
+            self.tally = {}
             self.counters_since = time.time()
         self._save_counters()
         return {"ok": True, "total_presses": self.total_presses,
@@ -715,6 +727,27 @@ class Engine:
         self.total_rounds = max(n("total_rounds"), n("rounds"),
                                 0 if data else len(self.history))
         self.total_presses = max(n("total_presses"), n("presses"))
+        def counts(key: str) -> Dict[str, int]:
+            raw = data.get(key)
+            out: Dict[str, int] = {}
+            if isinstance(raw, dict):
+                for sid, v in raw.items():
+                    try:
+                        out[str(sid)] = max(0, int(v))
+                    except (TypeError, ValueError):
+                        pass
+            return out
+        self.tally = counts("tally")
+        if data and "total_tally" in data:
+            self.total_tally = counts("total_tally")
+        else:
+            # First run with tallies: seed the all-time tally from the saved
+            # history (the last 200 rounds) so nothing already played is lost.
+            self.total_tally = {}
+            for h in self.history:
+                sid = h.get("winner")
+                if sid:
+                    self.total_tally[sid] = self.total_tally.get(sid, 0) + 1
         since = data.get("since")
         self.counters_since = float(since) if isinstance(since, (int, float)) else time.time()
 
@@ -727,6 +760,8 @@ class Engine:
                 "since": self.counters_since,
                 "total_presses": self.total_presses,
                 "total_rounds": self.total_rounds,
+                "tally": dict(self.tally),
+                "total_tally": dict(self.total_tally),
             }
             try:
                 self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -735,6 +770,19 @@ class Engine:
                 tmp.replace(self.counters_path)
             except Exception:
                 pass
+
+    def _log_winner(self, sid: str, character: str, at: float) -> None:
+        """Append every winner, for ever, to data/winners.csv."""
+        try:
+            new = not self.winners_path.exists()
+            stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(at))
+            name = character.replace(",", " ").replace("\n", " ")
+            with self.winners_path.open("a", encoding="utf-8") as fh:
+                if new:
+                    fh.write("time,section,character\n")
+                fh.write(f"{stamp},{sid},{name}\n")
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     # History persistence

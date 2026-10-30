@@ -196,11 +196,24 @@
           ctx.strokeRect(X(x) + 4, Y(y) + 4, w * s - 8, h * s - 8);
           ctx.setLineDash([]);
         }
-        ctx.fillStyle = "rgba(236,230,242,0.28)";
-        ctx.font = `600 ${Math.max(10, Math.min(15, w * s * 0.1))}px system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(sec.id, X(x + w / 2), Y(y + h / 2));
+        const labelSize = Math.max(10, Math.min(15, w * s * 0.1));
+        if (this.opts.icons && sec.icon) {
+          // Character icon in the middle of the glass, the section ID under it.
+          const iconSize = Math.max(16, Math.min(w, h) * s * 0.42);
+          ctx.globalAlpha = 0.9;
+          ctx.font = `${iconSize}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+          ctx.fillText(sec.icon, X(x + w / 2), Y(y + h / 2) - labelSize * 0.6);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "rgba(236,230,242,0.55)";
+          ctx.font = `600 ${labelSize}px system-ui, sans-serif`;
+          ctx.fillText(sec.id, X(x + w / 2), Y(y + h / 2) + iconSize * 0.5 + labelSize * 0.2);
+        } else {
+          ctx.fillStyle = "rgba(236,230,242,0.28)";
+          ctx.font = `600 ${labelSize}px system-ui, sans-serif`;
+          ctx.fillText(sec.id, X(x + w / 2), Y(y + h / 2));
+        }
       });
 
       // Hovered strip outline.
