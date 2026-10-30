@@ -333,6 +333,7 @@
     "steps": 0,
     "easing": 2.0,
     "order": "random",
+    "no_repeat": 2,
     "trail": 0.35,
     "flash_seconds": 2.0,
     "flash_hz": 6.0,

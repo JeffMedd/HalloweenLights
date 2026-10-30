@@ -980,7 +980,9 @@
     let status;
     try { status = await api("/api/status"); } catch (err) { return; }
     const cards = [
+      ["Presses", status.presses],
       ["Rounds played", status.rounds],
+      ["Presses, all time", status.total_presses],
       ["Last winner", status.last_winner || "-"],
       ["Frame rate", status.fps + " fps"],
       ["Button", status.button.backend === "gpiozero" ? "connected" : status.button.backend],
@@ -1110,6 +1112,12 @@
     $("#all-on").addEventListener("click", () =>
       post("/api/test/all", { seconds: 15 }).then(() => toast("All sections on for 15s")));
     $("#blackout").addEventListener("click", () => post("/api/blackout").then(() => toast("Blackout")));
+    $("#reset-counters").addEventListener("click", () => {
+      if (!confirm("Reset the presses and rounds counters to zero? The all-time total is kept.")) return;
+      post("/api/counters/reset")
+        .then((r) => { toast(`Counters reset. All-time presses: ${r.total_presses}`); refreshStatus(); })
+        .catch((e) => toast(e.message, true));
+    });
     ["#np-next", "#np2-next"].forEach((id) => $(id).addEventListener("click", () =>
       post("/api/idle/next").then(() => toast("Next effect"))));
     $("#np-resume").addEventListener("click", () => post("/api/effects/resume"));

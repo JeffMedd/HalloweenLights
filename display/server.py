@@ -142,6 +142,10 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
         with engine.lock:
             return JSONResponse(engine.trigger(forced=bool(payload.get("force"))))
 
+    async def reset_counters(request: Request) -> Response:
+        with engine.lock:
+            return JSONResponse(engine.reset_counters())
+
     async def stop_round(request: Request) -> Response:
         with engine.lock:
             engine.stop_round()
@@ -457,6 +461,7 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
         Route("/api/config/reload", reload_config, methods=["POST"]),
         Route("/api/trigger", trigger, methods=["POST"]),
         Route("/api/stop", stop_round, methods=["POST"]),
+        Route("/api/counters/reset", reset_counters, methods=["POST"]),
         Route("/api/test", test, methods=["POST"]),
         Route("/api/test/section/{section_id}", test_section, methods=["POST"]),
         Route("/api/test/all", test_all, methods=["POST"]),

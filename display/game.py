@@ -72,6 +72,8 @@ class Engine:
         self.sounds_dir = Path(sounds_dir)
         self.data_dir = Path(data_dir)
         self.history_path = self.data_dir / "history.json"
+        self.counters_path = self.data_dir / "counters.json"
+        self._counter_lock = threading.Lock()
         self.lock = threading.RLock()
 
         self.geo = Geometry(self.cfg)
@@ -116,6 +118,10 @@ class Engine:
         self.last_press_at: Optional[float] = None
         self.press_mono = -10.0
         self.history: List[Dict] = self._load_history()
+        self.total_presses = 0
+        self.total_rounds = 0
+        self.counters_since: Optional[float] = None
+        self._load_counters()
         self.frames = 0
         self.measured_fps = 0.0
         self._last_frame_time = now
@@ -191,6 +197,10 @@ class Engine:
 
     def trigger_from_button(self) -> None:
         """Called from the gpiozero thread; just raise a flag."""
+        if not self.testmode.active:
+            with self._counter_lock:
+                self.total_presses += 1
+            self._save_counters()
         self._trigger_pending = True
 
     def trigger(self, forced: bool = False) -> Dict:
@@ -198,6 +208,7 @@ class Engine:
             return {"accepted": False, "reason": "test mode is on"}
         if self.state not in (STATE_IDLE, STATE_SPOT) and not forced:
             self.ignored_presses += 1
+            self._save_counters()
             return {"accepted": False, "reason": f"busy ({self.state})"}
         candidates = enabled_section_ids(self.cfg)
         if not candidates:
@@ -205,15 +216,32 @@ class Engine:
         self._begin_round(candidates)
         return {"accepted": True, "winner": self.winner}
 
+    def _pick_winner(self, candidates: List[str]) -> str:
+        """Weighted random pick that skips the last few winners.
+
+        timing.no_repeat sets how many recent winners are ruled out. If that
+        would leave nothing to choose from (too few sections in play), the
+        window shrinks until something is available.
+        """
+        sections = self.cfg["sections"]
+        recent = [h.get("winner") for h in self.history]
+        skip = int(self.cfg["timing"].get("no_repeat", 0))
+        while True:
+            barred = set(recent[:skip])
+            pool = [s for s in candidates if s not in barred]
+            weights = [max(0.0, float(sections[s]["weight"])) for s in pool]
+            if pool and sum(weights) > 0:
+                return self.rng.choices(pool, weights=weights, k=1)[0]
+            if skip <= 0:
+                return self.rng.choice(candidates)
+            skip -= 1
+
     def _begin_round(self, candidates: Sequence[str]) -> None:
         cfg = self.cfg
         timing = cfg["timing"]
         now = time.monotonic()
 
-        weights = [max(0.0, float(cfg["sections"][s]["weight"])) for s in candidates]
-        if sum(weights) <= 0:
-            weights = [1.0] * len(candidates)
-        winner = self.rng.choices(list(candidates), weights=weights, k=1)[0]
+        winner = self._pick_winner(list(candidates))
 
         durations = effects.step_durations(
             timing["cycle_seconds"], timing["min_step_ms"], timing["max_step_ms"],
@@ -448,6 +476,8 @@ class Engine:
 
     def _finish_round(self, now: float) -> None:
         self.rounds += 1
+        with self._counter_lock:
+            self.total_rounds += 1
         self.last_winner = self.winner
         self.last_round_at = time.time()
         self.current_section = None
@@ -455,6 +485,7 @@ class Engine:
         self.history.insert(0, {"winner": self.winner, "at": self.last_round_at})
         del self.history[200:]
         self._save_history()
+        self._save_counters()
         self.audio.start_ambient()
         self._enter(STATE_COOLDOWN, now)
 
@@ -615,6 +646,7 @@ class Engine:
             "test": self.testmode.state(now),
             "power": self.sender.power(self.cfg["render"]["supply_voltage"]),
             "presses": self.button.press_count,
+            "total_presses": self.total_presses,
             "last_press_at": self.last_press_at,
         }
 
@@ -623,7 +655,11 @@ class Engine:
         return {
             "state": "test" if self.testmode.active else self.state,
             "rounds": self.rounds,
+            "presses": self.button.press_count,
             "ignored_presses": self.ignored_presses,
+            "total_presses": self.total_presses,
+            "total_rounds": self.total_rounds,
+            "counters_since": self.counters_since,
             "last_winner": self.last_winner,
             "last_round_at": self.last_round_at,
             "fps": round(self.measured_fps, 1),
@@ -643,6 +679,62 @@ class Engine:
 
     def expected_pixels(self) -> Dict[str, int]:
         return {t.name: t.pixel_count for t in self.sender.targets}
+
+    # ------------------------------------------------------------------
+    # Counters
+    # ------------------------------------------------------------------
+    # presses, rounds and ignored presses are the resettable counters.
+    # total_presses and total_rounds run for ever: a reset never touches
+    # them. total_presses counts real button presses outside test mode.
+
+    def reset_counters(self) -> Dict:
+        with self._counter_lock:
+            with self.button._lock:
+                self.button.press_count = 0
+            self.rounds = 0
+            self.ignored_presses = 0
+            self.counters_since = time.time()
+        self._save_counters()
+        return {"ok": True, "total_presses": self.total_presses,
+                "total_rounds": self.total_rounds}
+
+    def _load_counters(self) -> None:
+        try:
+            data = json.loads(self.counters_path.read_text("utf-8"))
+        except Exception:
+            data = {}
+        def n(key: str) -> int:
+            try:
+                return max(0, int(data.get(key, 0)))
+            except (TypeError, ValueError):
+                return 0
+        self.button.press_count = n("presses")
+        self.rounds = n("rounds")
+        self.ignored_presses = n("ignored_presses")
+        # A first run with no file seeds the totals from the saved history.
+        self.total_rounds = max(n("total_rounds"), n("rounds"),
+                                0 if data else len(self.history))
+        self.total_presses = max(n("total_presses"), n("presses"))
+        since = data.get("since")
+        self.counters_since = float(since) if isinstance(since, (int, float)) else time.time()
+
+    def _save_counters(self) -> None:
+        with self._counter_lock:
+            data = {
+                "presses": self.button.press_count,
+                "rounds": self.rounds,
+                "ignored_presses": self.ignored_presses,
+                "since": self.counters_since,
+                "total_presses": self.total_presses,
+                "total_rounds": self.total_rounds,
+            }
+            try:
+                self.data_dir.mkdir(parents=True, exist_ok=True)
+                tmp = self.counters_path.with_suffix(".tmp")
+                tmp.write_text(json.dumps(data), "utf-8")
+                tmp.replace(self.counters_path)
+            except Exception:
+                pass
 
     # ------------------------------------------------------------------
     # History persistence
