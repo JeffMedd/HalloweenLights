@@ -209,6 +209,9 @@ class Engine:
     def trigger(self, forced: bool = False) -> Dict:
         if self.testmode.active:
             return {"accepted": False, "reason": "test mode is on"}
+        if self.state == STATE_SPOT:
+            self.audio.stop_all_effects()   # a preview sound gives way to the game
+            self.spot = {}
         if self.state not in (STATE_IDLE, STATE_SPOT) and not forced:
             self.ignored_presses += 1
             self._save_counters()
@@ -334,6 +337,26 @@ class Engine:
         if self.state in (STATE_IDLE, STATE_SPOT, STATE_COOLDOWN):
             self.state = STATE_SPOT
             self.state_started = time.monotonic()
+
+    def preview_section(self, sid: str, seconds: float = 5.0) -> Dict:
+        """Play tab click: light one sash in its winning colour and play its
+        winner sound. Refused while a round or test mode is running, so it
+        never interrupts a game."""
+        if self.testmode.active:
+            return {"accepted": False, "reason": "test mode is on"}
+        if self.state not in (STATE_IDLE, STATE_SPOT, STATE_COOLDOWN):
+            return {"accepted": False, "reason": "a round is playing"}
+        if sid not in self.geo.section_slices:
+            return {"accepted": False, "reason": "unknown section"}
+        self.audio.stop_all_effects()
+        self.spot = {sid: self._section_rgb(sid, flash=True)}
+        self.spot_until = time.monotonic() + max(0.2, seconds)
+        self.state = STATE_SPOT
+        self.state_started = time.monotonic()
+        sound = self.cfg["sections"][sid].get("sound") or ""
+        played = bool(sound) and self.audio.play(
+            CH_FINALE, sound, self.cfg["audio"].get("finale_volume", 1.0))
+        return {"accepted": True, "section": sid, "sound": sound if played else None}
 
     def clear_test(self) -> None:
         self.spot = {}

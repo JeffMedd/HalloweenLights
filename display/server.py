@@ -182,6 +182,12 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
                              float(payload.get("seconds", 5.0)))
         return JSONResponse({"ok": True, "section": section_id, "colour": colour})
 
+    async def preview_section(request: Request) -> Response:
+        payload = await _json_body(request, required=False)
+        with engine.lock:
+            return JSONResponse(engine.preview_section(
+                request.path_params["section_id"], float(payload.get("seconds", 5.0))))
+
     async def test_all(request: Request) -> Response:
         payload = await _json_body(request, required=False)
         colour = payload.get("colour")
@@ -472,6 +478,7 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
         Route("/api/test", test, methods=["POST"]),
         Route("/api/test/section/{section_id}", test_section, methods=["POST"]),
         Route("/api/test/all", test_all, methods=["POST"]),
+        Route("/api/preview/section/{section_id}", preview_section, methods=["POST"]),
         Route("/api/test/clear", test_clear, methods=["POST"]),
         Route("/api/blackout", blackout, methods=["POST"]),
         Route("/api/status", status, methods=["GET"]),

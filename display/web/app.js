@@ -192,8 +192,12 @@
       interactive: true,
       icons: true,
       onPick: (hit) => {
-        post(`/api/test/section/${hit.section}`, { seconds: 5 })
-          .then(() => toast(`${hit.section} on for 5s`))
+        post(`/api/preview/section/${hit.section}`, { seconds: 5 })
+          .then((r) => {
+            if (!r.accepted) { toast(`Not now: ${r.reason}`, true); return; }
+            const s = cfg.sections[hit.section] || {};
+            toast(`${s.icon || ""} ${s.character || hit.section}${r.sound ? "" : " (no sound set)"}`.trim());
+          })
           .catch((e) => toast(e.message, true));
       },
     });
