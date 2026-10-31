@@ -170,6 +170,7 @@ DEFAULTS: Dict[str, Any] = {
         "easing": 2.0,            # exponent of the ease-out curve
         "order": "random",        # random | sequential
         "no_repeat": 2,           # recent winners that cannot win again
+        "queue_presses": True,    # a press during the finale starts the next round as soon as the flash ends
         "trail": 0.35,            # how much the previous section lingers, 0-1
         "flash_seconds": 2.0,
         "flash_hz": 6.0,
@@ -408,6 +409,7 @@ def validate(cfg: Dict[str, Any]) -> Dict[str, Any]:
     t["order"] = "sequential" if str(t["order"]).lower() == "sequential" else "random"
     t["trail"] = _clamp(_num(t["trail"], 0.35), 0.0, 1.0)
     t["no_repeat"] = int(_clamp(_num(t.get("no_repeat"), 2), 0, 7))
+    t["queue_presses"] = bool(t.get("queue_presses", True))
     t["flash_seconds"] = _clamp(_num(t["flash_seconds"], 2), 0.0, 30.0)
     t["flash_hz"] = _clamp(_num(t["flash_hz"], 6), 0.5, 25.0)
     t["flash_duty"] = _clamp(_num(t["flash_duty"], 0.55), 0.05, 0.95)

@@ -46,6 +46,10 @@ STATE_FADE = "fade"
 STATE_COOLDOWN = "cooldown"
 STATE_SPOT = "spotlight"      # a sash lit briefly from the Play tab
 
+# A button press in these states is held and starts the next round as soon as
+# the winner has finished flashing, instead of being ignored.
+QUEUE_STATES = (STATE_FLASH, STATE_HOLD, STATE_FADE, STATE_COOLDOWN)
+
 PREVIEW_KEEPALIVE = 15.0      # seconds an effect preview runs without a refresh
 
 
@@ -130,6 +134,7 @@ class Engine:
         self._last_frame_time = now
         self._trigger_pending = False
         self.round_counts = True   # False for rounds started from the web page
+        self.queued_source: Optional[str] = None   # press waiting for the round to end
         self._last_frame: np.ndarray = self.geo.blank()
 
     # ------------------------------------------------------------------
@@ -218,6 +223,15 @@ class Engine:
         if self.state == STATE_SPOT:
             self.audio.stop_all_effects()   # a preview sound gives way to the game
             self.spot = {}
+        if (self.state in QUEUE_STATES and not forced
+                and self.cfg["timing"].get("queue_presses", True)
+                and self.queued_source is None):
+            # Pressed while the winner is flashing or fading: start the next
+            # round the moment the flash ends (or straight away if it has).
+            self.queued_source = source
+            if self.state != STATE_FLASH:
+                self._start_queued(time.monotonic())
+            return {"accepted": True, "queued": True, "counted": counts}
         if self.state not in (STATE_IDLE, STATE_SPOT) and not forced:
             if counts:
                 self.ignored_presses += 1
@@ -229,6 +243,20 @@ class Engine:
         self.round_counts = counts
         self._begin_round(candidates)
         return {"accepted": True, "winner": self.winner, "counted": counts}
+
+    def _start_queued(self, now: float) -> None:
+        """End the current round now (recording it) and start the queued one."""
+        source = self.queued_source or "web"
+        self.queued_source = None
+        if self.state in (STATE_FLASH, STATE_HOLD, STATE_FADE):
+            self._finish_round(now)
+        if self.testmode.active:
+            return
+        candidates = enabled_section_ids(self.cfg)
+        if not candidates:
+            return
+        self.round_counts = source == "button"
+        self._begin_round(candidates)
 
     def _pick_winner(self, candidates: List[str]) -> str:
         """Weighted random pick that skips the last few winners.
@@ -374,6 +402,7 @@ class Engine:
             self.state_started = time.monotonic()
 
     def stop_round(self) -> None:
+        self.queued_source = None
         self.audio.stop_all_effects()
         self.schedule = []
         self.audio_events = []
@@ -496,6 +525,9 @@ class Engine:
 
         elapsed = now - self.state_started
         if state == STATE_FLASH and elapsed >= timing["flash_seconds"]:
+            if self.queued_source is not None:
+                self._start_queued(now)
+                return
             self._enter(STATE_HOLD, now)
         elif state == STATE_HOLD and elapsed >= timing["hold_seconds"]:
             self._enter(STATE_FADE, now)
