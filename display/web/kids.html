@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d0712">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Spooky Windows</title>
+<style>
+  :root {
+    --bg: #0d0712;
+    --wall: #241a2c;
+    --frame: #3b3441;
+    --text: #f2ecf7;
+    --muted: #9c90a8;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, #2a1638 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    touch-action: manipulation; overscroll-behavior: none;
+  }
+  .house {
+    position: fixed;
+    inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+           max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    display: grid; grid-template-rows: 1fr 1fr; gap: 3vmin;
+    padding-top: 6vmin;
+  }
+  /* Roof line over the upstairs bay */
+  .house::before {
+    content: ""; position: absolute; left: 6%; right: 6%; top: 0; height: 6vmin;
+    background: var(--wall); clip-path: polygon(8% 100%, 50% 0, 92% 100%);
+    opacity: 0.8;
+  }
+  .bay {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3vmin;
+    background: var(--wall); border-radius: 2.5vmin; padding: 2.5vmin;
+  }
+  .window {
+    display: grid; grid-template-rows: 1fr 1fr; gap: 1.5vmin;
+    background: var(--frame); border-radius: 1.8vmin; padding: 1.5vmin;
+  }
+  .sash {
+    --c: #ff6a00;
+    position: relative; border: 0; margin: 0; padding: 0;
+    border-radius: 1.4vmin; cursor: pointer;
+    background: #06050a;
+    box-shadow: inset 0 0 0 0.5vmin color-mix(in srgb, var(--c) 45%, transparent),
+                inset 0 0 4vmin color-mix(in srgb, var(--c) 30%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 120ms ease, filter 200ms ease, opacity 300ms ease;
+    color: var(--text); font: inherit;
+  }
+  .sash .icon {
+    font-size: min(16vmin, 13vh);
+    line-height: 1;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    filter: drop-shadow(0 0 1.5vmin color-mix(in srgb, var(--c) 70%, transparent));
+    pointer-events: none;
+  }
+  .sash:active { transform: scale(0.95); }
+  .sash.lit {
+    background: color-mix(in srgb, var(--c) 55%, #06050a);
+    box-shadow: 0 0 6vmin var(--c), inset 0 0 0 0.7vmin var(--c);
+    animation: glow 0.5s ease-in-out infinite alternate;
+  }
+  .sash.lit .icon { animation: bounce 0.5s ease-in-out infinite alternate; }
+  .sash.off { opacity: 0.25; pointer-events: none; }
+  @keyframes glow { to { filter: brightness(1.35); } }
+  @keyframes bounce { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.18) rotate(6deg); } }
+
+  body.busy .sash { opacity: 0.35; filter: grayscale(0.6); }
+  .wait {
+    position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    pointer-events: none; font-size: 22vmin;
+  }
+  body.busy .wait { display: flex; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } }
+
+  .corner {
+    position: fixed; top: max(6px, env(safe-area-inset-top)); width: 44px; height: 44px;
+    border: 0; background: transparent; color: var(--muted); font-size: 22px;
+    opacity: 0.35; z-index: 5;
+  }
+  .corner.left { left: max(6px, env(safe-area-inset-left)); }
+  .corner.right { right: max(6px, env(safe-area-inset-right)); }
+  .hold-ring {
+    position: fixed; top: max(6px, env(safe-area-inset-top)); left: max(6px, env(safe-area-inset-left));
+    width: 44px; height: 44px; border-radius: 50%; pointer-events: none; z-index: 4;
+    background: conic-gradient(var(--text) calc(var(--p, 0) * 1turn), transparent 0);
+    opacity: 0.35; -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%);
+            mask: radial-gradient(circle, transparent 58%, #000 60%);
+  }
+
+  /* Landscape tablet: the two bays side by side */
+  @media (orientation: landscape) {
+    .house { grid-template-rows: none; grid-template-columns: 1fr 1fr; padding-top: 0; }
+    .house::before { display: none; }
+  }
+</style>
+</head>
+<body>
+  <button class="corner left" id="exit" aria-label="Hold to leave">&#9881;</button>
+  <div class="hold-ring" id="ring"></div>
+  <button class="corner right" id="full" aria-label="Full screen">&#x26F6;</button>
+
+  <main class="house" id="house"></main>
+  <div class="wait" aria-hidden="true">&#127875;</div>
+
+<script>
+(() => {
+  "use strict";
+  const BUSY = new Set(["cycle", "flash", "hold", "fade"]);
+  const house = document.getElementById("house");
+  const buttons = {};
+  let lastTap = 0;
+  let litTimer = null;
+
+  async function api(path, opts) {
+    const res = await fetch(path, opts);
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  }
+
+  function build(cfg) {
+    house.innerHTML = "";
+    // Upstairs bay first, then ground. In each bay, left window then right;
+    // in each window, upper sash (row 0) above lower (row 1). Same as the house.
+    ["upstairs", "ground"].forEach((floor) => {
+      const bay = document.createElement("div");
+      bay.className = "bay";
+      [0, 1].forEach((col) => {
+        const win = document.createElement("div");
+        win.className = "window";
+        [0, 1].forEach((row) => {
+          const entry = Object.entries(cfg.sections).find(([, s]) =>
+            s.floor === floor && Math.min(1, s.col) === col && s.row === row);
+          const btn = document.createElement("button");
+          btn.className = "sash";
+          if (entry) {
+            const [sid, s] = entry;
+            btn.style.setProperty("--c", s.flash_colour || s.colour || "#ff6a00");
+            btn.innerHTML = `<span class="icon">${s.icon || "\u{1F383}"}</span>`;
+            btn.setAttribute("aria-label", s.character || sid);
+            if (!s.enabled) btn.classList.add("off");
+            btn.addEventListener("pointerdown", (e) => { e.preventDefault(); tap(sid); });
+            buttons[sid] = btn;
+          } else {
+            btn.classList.add("off");
+          }
+          win.appendChild(btn);
+        });
+        bay.appendChild(win);
+      });
+      house.appendChild(bay);
+    });
+  }
+
+  function light(sid) {
+    Object.values(buttons).forEach((b) => b.classList.remove("lit"));
+    if (buttons[sid]) buttons[sid].classList.add("lit");
+    clearTimeout(litTimer);
+    litTimer = setTimeout(() => buttons[sid] && buttons[sid].classList.remove("lit"), 5000);
+  }
+
+  async function tap(sid) {
+    const now = Date.now();
+    if (now - lastTap < 500) return;          // small hands double-tap a lot
+    lastTap = now;
+    if (document.body.classList.contains("busy")) return;
+    light(sid);
+    try {
+      const r = await api(`/api/preview/section/${sid}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seconds: 5 }),
+      });
+      if (!r.accepted) {
+        Object.values(buttons).forEach((b) => b.classList.remove("lit"));
+        if (/round/.test(r.reason || "")) document.body.classList.add("busy");
+      }
+    } catch (err) { /* network blip: the next tap will try again */ }
+  }
+
+  async function poll() {
+    try {
+      const s = await api("/api/status");
+      document.body.classList.toggle("busy", BUSY.has(s.state));
+    } catch (err) { /* keep the last state */ }
+  }
+
+  // Hold the gear for two seconds to go back to the full controls.
+  const exit = document.getElementById("exit");
+  const ring = document.getElementById("ring");
+  let holdStart = 0, holdFrame = 0;
+  function holdTick() {
+    const p = Math.min(1, (Date.now() - holdStart) / 2000);
+    ring.style.setProperty("--p", p);
+    if (p >= 1) { location.href = "/"; return; }
+    holdFrame = requestAnimationFrame(holdTick);
+  }
+  function holdEnd() { cancelAnimationFrame(holdFrame); ring.style.setProperty("--p", 0); }
+  exit.addEventListener("pointerdown", (e) => { e.preventDefault(); holdStart = Date.now(); holdTick(); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => exit.addEventListener(ev, holdEnd));
+
+  document.getElementById("full").addEventListener("click", () => {
+    const el = document.documentElement;
+    const go = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else if (go) {
+      go.call(el).catch(() => {});
+    }
+  });
+
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+  document.addEventListener("gesturestart", (e) => e.preventDefault());
+
+  api("/api/config").then((r) => build(r.config)).catch(() => {
+    house.innerHTML = '<p style="margin:auto;font-size:5vmin">Cannot reach the display. Is the Pi on?</p>';
+  });
+  poll();
+  setInterval(poll, 1000);
+})();
+</script>
+</body>
+</html>

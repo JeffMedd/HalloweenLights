@@ -452,6 +452,9 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
     async def index(request: Request) -> Response:
         return FileResponse(WEB_DIR / "index.html")
 
+    async def kids(request: Request) -> Response:
+        return FileResponse(WEB_DIR / "kids.html")
+
     async def http_error(request: Request, exc: HTTPException) -> Response:
         return JSONResponse({"error": exc.detail}, status_code=exc.status_code)
 
@@ -467,6 +470,7 @@ def create_app(config_path: Path, sounds_dir: Path, data_dir: Path) -> Starlette
 
     routes = [
         Route("/", index),
+        Route("/kids", kids),
         Route("/api/config", get_config, methods=["GET"]),
         Route("/api/config", put_config, methods=["PUT"]),
         Route("/api/config", patch_config, methods=["PATCH"]),

@@ -1126,7 +1126,7 @@
   }
 
   function wireControls() {
-    $$(".tab").forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.tab)));
+    $$(".tab[data-tab]").forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.tab)));
     $("#save").addEventListener("click", save);
 
     $("#trigger").addEventListener("click", () => {

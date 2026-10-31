@@ -334,3 +334,4 @@ input:focus, select:focus { outline: 2px solid var(--accent-2); outline-offset: 
 
 .tally-card { margin-top: 14px; }
 .tally-card .strip-table td:first-child { font-size: 18px; width: 28px; }
+.kids-tab { text-decoration: none; margin-left: auto; }
